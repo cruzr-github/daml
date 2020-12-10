@@ -21,7 +21,7 @@ steps:
               -H 'Content-type: application/json' \
               --data "$PAYLOAD" \
               Slack.team-daml
-    if [ "$(Build.SourceBranchName)" = "master" ]; then
+    if [ "$(Build.SourceBranchName)" = "main" ]; then
         curl -XPOST \
              -i \
              -H 'Content-type: application/json' \
