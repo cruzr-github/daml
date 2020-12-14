@@ -195,7 +195,7 @@ Version: 1.8
 Version: 1.11 (preview)
 .......................
 
-(version 1.11 is not frozen and still may changed, do not use in production)
+(version 1.11 is not frozen and may still change, do not use in production)
 
 * Introduction date:
 

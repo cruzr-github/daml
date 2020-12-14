@@ -74,15 +74,15 @@ object EngineConfig {
     */
   def Legacy: EngineConfig =
     Lenient.copy(
-      allowedLanguageVersions =
-        transaction.VersionTimeline.stableLanguageVersions.copy(max = LanguageVersion.v1_8))
+      allowedLanguageVersions = LanguageVersion.StableVersions.copy(max = LanguageVersion.v1_8))
 
   /**
     * Development configuration, should not be used in PROD.  Allowed
     * the same input and output versions as [[Lenient]] plus the
     * development versions.
     */
-  val Dev: EngineConfig =
-    Lenient.copy(allowedLanguageVersions = transaction.VersionTimeline.devLanguageVersions)
+  val Dev: EngineConfig = new EngineConfig(
+    allowedLanguageVersions = LanguageVersion.DevVersions
+  )
 
 }

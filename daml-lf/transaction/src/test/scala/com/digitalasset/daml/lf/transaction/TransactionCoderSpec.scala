@@ -61,16 +61,12 @@ class TransactionCoderSpec
               versionedNode,
             )
 
-          val t1 = Right((NodeId(0), versionedNode))
-          val t2 = TransactionCoder.decodeVersionedNode(
+          Right((NodeId(0), versionedNode)) shouldEqual TransactionCoder.decodeVersionedNode(
             TransactionCoder.NidDecoder,
             ValueCoder.CidDecoder,
             txVersion,
             encodedNode,
           )
-
-          if (t1 != t2)
-            t1 shouldEqual t2
 
           Right(createNode.informeesOfNode) shouldEqual
             TransactionCoder
