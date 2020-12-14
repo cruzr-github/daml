@@ -24,11 +24,11 @@ object TransactionVersion
 
   private[lf] implicit val Ordering: Ordering[TransactionVersion] = mkOrdering
 
-  private[lf] val List(v10, vDev) = acceptedVersions
+  private[lf] val List(v10, v11, vDev) = acceptedVersions
 
   val minVersion = v10
-  private[transaction] val minChoiceObservers = vDev
-  private[transaction] val minNodeVersion = vDev
+  private[transaction] val minChoiceObservers = v11
+  private[transaction] val minNodeVersion = v11
 
   // Older versions are deprecated https://github.com/digital-asset/daml/issues/5220
   private[lf] val StableOutputVersions: VersionRange[TransactionVersion] =

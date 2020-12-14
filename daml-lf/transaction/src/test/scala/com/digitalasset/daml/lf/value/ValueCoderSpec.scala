@@ -25,9 +25,7 @@ class ValueCoderSpec
 
   implicit val noStringShrink: Shrink[String] = Shrink.shrinkAny[String]
 
-  private[this] val lastDecimalVersion = ValueVersion("5")
-
-  private[this] val firstNumericVersion = ValueVersion("6")
+  private[this] val firstNumericVersion = ValueVersions.v6
 
   private[this] val defaultValueVersion = ValueVersion.acceptedVersions.lastOption getOrElse sys
     .error("there are no allowed versions! impossible! but could it be?")
@@ -47,30 +45,6 @@ class ValueCoderSpec
       forAll("Bool invariant") { b: Boolean =>
         val value = ValueBool(b)
         testRoundTrip(value)
-      }
-    }
-
-    "do Decimal" in {
-      forAll("Decimal (BigDecimal) invariant") { d: BigDecimal =>
-        // we are filtering on decimals invariant under string conversion
-        whenever(Decimal.fromBigDecimal(d).isRight) {
-          val Right(dec) = Decimal.fromBigDecimal(d)
-          val value = ValueNumeric(dec)
-          val recoveredDecimal = ValueCoder.decodeValue[ContractId](
-            ValueCoder.CidDecoder,
-            lastDecimalVersion,
-            assertRight(
-              ValueCoder
-                .encodeValue[ContractId](ValueCoder.CidEncoder, lastDecimalVersion, value),
-            ),
-          ) match {
-            case Right(ValueNumeric(d)) => d
-            case x => fail(s"should have got a decimal back, got $x")
-          }
-          Numeric.toUnscaledString(value.value) shouldEqual Numeric.toUnscaledString(
-            recoveredDecimal,
-          )
-        }
       }
     }
 

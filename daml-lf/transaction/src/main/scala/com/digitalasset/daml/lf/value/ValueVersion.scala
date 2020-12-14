@@ -24,13 +24,14 @@ object ValueVersion
 
   private[lf] implicit val Ordering: Ordering[ValueVersion] = mkOrdering
 
-  private[value] val minVersion = ValueVersion("6")
-  private[value] val minGenMap = ValueVersion("dev")
-  private[value] val minContractIdV1 = ValueVersion("dev")
+  private[lf] val List(v6, v11, vDev) = acceptedVersions
 
-  // Older versions are deprecated https://github.com/digital-asset/daml/issues/5220
-  private[lf] val StableOutputVersions: VersionRange[ValueVersion] =
-    VersionRange(ValueVersion("6"), ValueVersion("6"))
+  private[value] val minVersion = v6
+  private[value] val minGenMap = v11
+  private[value] val minContractIdV1 = v11
+
+  val StableOutputVersions: VersionRange[ValueVersion] =
+    VersionRange(v6, v6)
 
   private[lf] val DevOutputVersions: VersionRange[ValueVersion] =
     StableOutputVersions.copy(max = acceptedVersions.last)
