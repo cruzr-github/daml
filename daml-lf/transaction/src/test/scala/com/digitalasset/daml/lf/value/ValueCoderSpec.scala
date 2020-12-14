@@ -25,7 +25,7 @@ class ValueCoderSpec
 
   implicit val noStringShrink: Shrink[String] = Shrink.shrinkAny[String]
 
-  private[this] val firstNumericVersion = ValueVersions.v6
+  private[this] val firstNumericVersion = ValueVersion.v6
 
   private[this] val defaultValueVersion = ValueVersion.acceptedVersions.lastOption getOrElse sys
     .error("there are no allowed versions! impossible! but could it be?")
