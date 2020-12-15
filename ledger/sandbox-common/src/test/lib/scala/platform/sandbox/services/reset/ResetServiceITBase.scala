@@ -59,7 +59,6 @@ import com.daml.platform.testing.{StreamConsumer, WaitForCompletionsObserver}
 import com.daml.timer.RetryStrategy
 import com.google.protobuf.empty.Empty
 import io.grpc.Status
-import org.scalatest.Assertion
 import org.scalatest.concurrent.{AsyncTimeLimitedTests, ScalaFutures}
 import org.scalatest.time.Span
 import org.scalatest.matchers.should.Matchers
@@ -94,17 +93,28 @@ abstract class ResetServiceITBase
   protected def timeIsStatic: Boolean =
     config.timeProviderType.getOrElse(SandboxConfig.DefaultTimeProviderType) == TimeProviderType.Static
 
+  def mark[A](label: String)(f: Future[A]): Future[A] = f.recover {
+    case t =>
+      Console.err.println(label)
+      t.printStackTrace()
+      throw t
+  }
+
   protected def waitForLedgerToStart(): Future[LedgerId] =
     for {
-      ledgerId <- eventually { (_, _) =>
+      ledgerId <- mark("eventuallyFetchId")(eventually { (_, _) =>
         fetchLedgerId()
-      }
+      })
       // Completions won't work until a ledger configuration is in place, so we wait for one.
-      configurations <- new StreamConsumer[GetLedgerConfigurationResponse](responseObserver =>
-        LedgerConfigurationServiceGrpc
-          .stub(channel)
-          .getLedgerConfiguration(GetLedgerConfigurationRequest(ledgerId.unwrap), responseObserver))
-        .firstWithin(Span.convertSpanToDuration(scaled(1.second)))
+      configurations <- mark("getConfig")(
+        new StreamConsumer[GetLedgerConfigurationResponse](
+          responseObserver =>
+            LedgerConfigurationServiceGrpc
+              .stub(channel)
+              .getLedgerConfiguration(
+                GetLedgerConfigurationRequest(ledgerId.unwrap),
+                responseObserver))
+          .firstWithin(Span.convertSpanToDuration(scaled(1.second))))
     } yield {
       configurations should have size 1
       ledgerId
@@ -118,9 +128,10 @@ abstract class ResetServiceITBase
 
   // Resets and waits for a new ledger identity to be available
   protected def reset(ledgerId: LedgerId): Future[LedgerId] =
-    ResetServiceGrpc
-      .stub(channel)
-      .reset(ResetRequest(ledgerId.unwrap))
+    mark("reset")(
+      ResetServiceGrpc
+        .stub(channel)
+        .reset(ResetRequest(ledgerId.unwrap)))
       .flatMap(_ => waitForLedgerToStart())
 
   protected def timedReset(ledgerId: LedgerId): Future[(LedgerId, FiniteDuration)] = {
@@ -208,20 +219,10 @@ abstract class ResetServiceITBase
       }
 
       "return new ledger ID - 20 resets" in {
-        def go(idToReset: LedgerId, acc: List[LedgerId] = List.empty): Future[Assertion] =
-          if (acc.size == 20) {
-            Future.successful(acc.distinct should have size 20)
-          } else {
-            for {
-              newId <- reset(idToReset)
-              _ <- go(newId, newId :: acc)
-            } yield succeed
-          }
-
-        for {
-          initialId <- fetchLedgerId()
-          _ <- go(initialId)
-        } yield succeed
+        Future
+          .sequence(
+            Iterator.iterate(mark("fetchId")(fetchLedgerId()))(_.flatMap(reset)).take(20).toVector)
+          .map(ids => ids.distinct should have size 20L)
       }
 
       // 4 attempts with 5 transactions each seem to strike the right balance to complete before the
