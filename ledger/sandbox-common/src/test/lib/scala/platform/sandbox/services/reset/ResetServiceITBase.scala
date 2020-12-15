@@ -59,6 +59,7 @@ import com.daml.platform.testing.{StreamConsumer, WaitForCompletionsObserver}
 import com.daml.timer.RetryStrategy
 import com.google.protobuf.empty.Empty
 import io.grpc.Status
+import org.scalatest.Assertion
 import org.scalatest.concurrent.{AsyncTimeLimitedTests, ScalaFutures}
 import org.scalatest.time.Span
 import org.scalatest.matchers.should.Matchers
@@ -207,9 +208,20 @@ abstract class ResetServiceITBase
       }
 
       "return new ledger ID - 20 resets" in {
-        Future
-          .sequence(Iterator.iterate(fetchLedgerId())(_.flatMap(reset)).take(20).toVector)
-          .map(ids => ids.distinct should have size 20L)
+        def go(idToReset: LedgerId, acc: List[LedgerId] = List.empty): Future[Assertion] =
+          if (acc.size == 20) {
+            Future.successful(acc.distinct should have size 20)
+          } else {
+            for {
+              newId <- reset(idToReset)
+              _ <- go(newId, newId :: acc)
+            } yield succeed
+          }
+
+        for {
+          initialId <- fetchLedgerId()
+          _ <- go(initialId)
+        } yield succeed
       }
 
       // 4 attempts with 5 transactions each seem to strike the right balance to complete before the
