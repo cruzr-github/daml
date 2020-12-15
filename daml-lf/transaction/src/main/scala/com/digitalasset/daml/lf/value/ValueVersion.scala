@@ -18,7 +18,11 @@ final case class ValueVersion(protoValue: String)
   */
 object ValueVersion
     extends LfVersions(
-      versionsAscending = NonEmptyList(new ValueVersion("6"), new ValueVersion("dev")))(
+      versionsAscending = NonEmptyList(
+        new ValueVersion("6"),
+        new ValueVersion("11"),
+        new ValueVersion("dev"),
+      ))(
       _.protoValue,
     ) {
 

@@ -17,8 +17,12 @@ final case class TransactionVersion(protoValue: String)
   * Currently supported versions of the DAML-LF transaction specification.
   */
 object TransactionVersion
-    extends LfVersions(versionsAscending =
-      NonEmptyList(new TransactionVersion("10"), new TransactionVersion("dev")))(
+    extends LfVersions(
+      versionsAscending = NonEmptyList(
+        new TransactionVersion("10"),
+        new TransactionVersion(("11")),
+        new TransactionVersion("dev"),
+      ))(
       _.protoValue,
     ) {
 
@@ -43,14 +47,16 @@ object TransactionVersion
       v1_6 -> v10,
       v1_7 -> v10,
       v1_8 -> v10,
+      v1_11 -> v11,
       v1_dev -> vDev,
     )
   }
 
   private[lf] val assignValueVersion: TransactionVersion => ValueVersion = {
     Map(
-      v10 -> ValueVersion("6"),
-      vDev -> ValueVersion("dev"),
+      v10 -> ValueVersion.v6,
+      v11 -> ValueVersion.v11,
+      vDev -> ValueVersion.vDev,
     )
   }
 
